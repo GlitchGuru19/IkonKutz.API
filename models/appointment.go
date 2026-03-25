@@ -4,10 +4,13 @@ import "gorm.io/gorm"
 
 type Appointment struct {
 	gorm.Model
-	CustomerName string  `json:"customer_name" binding:"required"`
-	ServiceId    uint    `json:"service_id" binding:"required"`
+
+	UserID       uint    `json:"userId"`
+	CustomerName string  `json:"customerName"`
+	ServiceID    uint    `json:"serviceId"`
 	ServiceName  string  `json:"serviceName"`
-	Date         string  `json:"date`
+	SlotID       uint    `json:"slotId"`
+	Date         string  `json:"date"`
 	Time         string  `json:"time"`
 	Price        float64 `json:"price"`
 	Status       string  `json:"status"`

@@ -8,6 +8,141 @@ import (
 	"IkonKutz.API/dto"
 	"IkonKutz.API/initializers"
 	"IkonKutz.API/models"
+	"IkonKutz.API/utils"
+	"github.com/gin-gonic/gin"
+)
+
+func GetServices(c *gin.Context) {
+	var services []models.Service
+
+	if err := initializers.DB.Order("created_at desc").Find(&services).Error; err != nil {
+		utils.Error(c, http.StatusInternalServerError, "Failed to fetch services")
+		return
+	}
+
+	utils.OK(c, "Services fetched successfully", services)
+}
+
+func GetService(c *gin.Context) {
+	id := c.Param("id")
+
+	parsedID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		utils.Error(c, http.StatusBadRequest, "Invalid service ID")
+		return
+	}
+
+	var service models.Service
+	if err := initializers.DB.First(&service, uint(parsedID)).Error; err != nil {
+		utils.Error(c, http.StatusNotFound, "Service not found")
+		return
+	}
+
+	utils.OK(c, "Service fetched successfully", service)
+}
+
+func CreateService(c *gin.Context) {
+	var body dto.CreateServiceRequest
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		utils.Error(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if strings.TrimSpace(body.Name) == "" || body.Price <= 0 || body.DurationMinutes <= 0 {
+		utils.Error(c, http.StatusBadRequest, "Name, price and durationMinutes are required")
+		return
+	}
+
+	service := models.Service{
+		Name:            strings.TrimSpace(body.Name),
+		Price:           body.Price,
+		DurationMinutes: body.DurationMinutes,
+		Description:     strings.TrimSpace(body.Description),
+	}
+
+	if err := initializers.DB.Create(&service).Error; err != nil {
+		utils.Error(c, http.StatusInternalServerError, "Failed to create service")
+		return
+	}
+
+	utils.Created(c, "Service created successfully", service)
+}
+
+func UpdateService(c *gin.Context) {
+	id := c.Param("id")
+
+	parsedID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		utils.Error(c, http.StatusBadRequest, "Invalid service ID")
+		return
+	}
+
+	var body dto.UpdateServiceRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		utils.Error(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if strings.TrimSpace(body.Name) == "" || body.Price <= 0 || body.DurationMinutes <= 0 {
+		utils.Error(c, http.StatusBadRequest, "Name, price and durationMinutes are required")
+		return
+	}
+
+	var service models.Service
+	if err := initializers.DB.First(&service, uint(parsedID)).Error; err != nil {
+		utils.Error(c, http.StatusNotFound, "Service not found")
+		return
+	}
+
+	service.Name = strings.TrimSpace(body.Name)
+	service.Price = body.Price
+	service.DurationMinutes = body.DurationMinutes
+	service.Description = strings.TrimSpace(body.Description)
+
+	if err := initializers.DB.Save(&service).Error; err != nil {
+		utils.Error(c, http.StatusInternalServerError, "Failed to update service")
+		return
+	}
+
+	utils.OK(c, "Service updated successfully", service)
+}
+
+func DeleteService(c *gin.Context) {
+	id := c.Param("id")
+
+	parsedID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		utils.Error(c, http.StatusBadRequest, "Invalid service ID")
+		return
+	}
+
+	var service models.Service
+	if err := initializers.DB.First(&service, uint(parsedID)).Error; err != nil {
+		utils.Error(c, http.StatusNotFound, "Service not found")
+		return
+	}
+
+	if err := initializers.DB.Delete(&service).Error; err != nil {
+		utils.Error(c, http.StatusInternalServerError, "Failed to delete service")
+		return
+	}
+
+	utils.OK(c, "Service deleted successfully", nil)
+}
+
+// This is how to do a proper controller with all the CRUD operations before the complicated stuff.
+/*
+package controllers
+
+import (
+	"net/http"
+	"strconv"
+	"strings"
+
+	"IkonKutz.API/dto"
+	"IkonKutz.API/initializers"
+	"IkonKutz.API/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -184,3 +319,5 @@ func DeleteService(c *gin.Context) {
 		"message": "Service deleted successfully",
 	})
 }
+
+*/

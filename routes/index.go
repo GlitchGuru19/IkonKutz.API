@@ -6,4 +6,5 @@ func RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 
 	RegisterServiceRoutes(api)
+	RegisterAppointmentRoutes(api)
 }

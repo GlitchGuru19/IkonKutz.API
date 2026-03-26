@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetSlots retrieves a list of slots, optionally filtered by date, booked status, and locked status.
 func GetSlots(c *gin.Context) {
 	var slots []models.Slot
 
@@ -21,6 +22,8 @@ func GetSlots(c *gin.Context) {
 		db = db.Where("date = ?", date)
 	}
 
+	// Allow filtering by booked and locked status 
+	// using query parameters like ?booked=true or ?locked=false
 	if booked := strings.TrimSpace(c.Query("booked")); booked != "" {
 		if booked == "true" {
 			db = db.Where("is_booked = ?", true)
@@ -29,6 +32,8 @@ func GetSlots(c *gin.Context) {
 		}
 	}
 
+	// Allow filtering by locked status
+	// using ?locked=true or ?locked=false
 	if locked := strings.TrimSpace(c.Query("locked")); locked != "" {
 		if locked == "true" {
 			db = db.Where("is_locked = ?", true)
@@ -37,6 +42,7 @@ func GetSlots(c *gin.Context) {
 		}
 	}
 
+	// Always order by date and time ascending to show the earliest slots first
 	if err := db.Order("date asc, time asc").Find(&slots).Error; err != nil {
 		utils.Error(c, http.StatusInternalServerError, "Failed to fetch slots")
 		return
@@ -45,6 +51,7 @@ func GetSlots(c *gin.Context) {
 	utils.OK(c, "Slots fetched successfully", slots)
 }
 
+// GetSlot retrieves a single slot by its ID.
 func GetSlot(c *gin.Context) {
 	id := c.Param("id")
 
@@ -63,6 +70,7 @@ func GetSlot(c *gin.Context) {
 	utils.OK(c, "Slot fetched successfully", slot)
 }
 
+// CreateSlot creates a new slot with the provided date, time, and locked status.
 func CreateSlot(c *gin.Context) {
 	var body dto.CreateSlotRequest
 
@@ -97,6 +105,8 @@ func CreateSlot(c *gin.Context) {
 	utils.Created(c, "Slot created successfully", slot)
 }
 
+// UpdateSlot updates the date, time, and locked status of an existing slot.
+// Booked slots cannot be moved to a different date or time.
 func UpdateSlot(c *gin.Context) {
 	id := c.Param("id")
 
@@ -146,6 +156,7 @@ func UpdateSlot(c *gin.Context) {
 	utils.OK(c, "Slot updated successfully", slot)
 }
 
+// LockSlot sets the IsLocked field of a slot to true, preventing it from being booked.
 func LockSlot(c *gin.Context) {
 	id := c.Param("id")
 
@@ -171,6 +182,7 @@ func LockSlot(c *gin.Context) {
 	utils.OK(c, "Slot locked successfully", slot)
 }
 
+// UnlockSlot sets the IsLocked field of a slot to false, allowing it to be booked again.
 func UnlockSlot(c *gin.Context) {
 	id := c.Param("id")
 
@@ -196,6 +208,7 @@ func UnlockSlot(c *gin.Context) {
 	utils.OK(c, "Slot unlocked successfully", slot)
 }
 
+// DeleteSlot deletes a slot by its ID. Booked slots cannot be deleted.
 func DeleteSlot(c *gin.Context) {
 	id := c.Param("id")
 

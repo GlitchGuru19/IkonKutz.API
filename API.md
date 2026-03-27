@@ -3484,4 +3484,3 @@ GET http://localhost:3000/api/appointments/me
 - `DELETE http://localhost:3000/api/slots/:id`
 - `GET http://localhost:3000/api/appointmets`
 
-3485

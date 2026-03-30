@@ -3,9 +3,11 @@ package utils
 import (
 	"time"
 
-	"IkonKutz.API/initializers"
 	"github.com/golang-jwt/jwt/v4"
 )
+
+var jwtSecret = []byte("fallback-secret-please-set-JWT_SECRET") // Fallback; override in init if needed
+const jwtExpiresInHours = 24
 
 // struct for JWT claims
 type JWTClaims struct {
@@ -15,9 +17,9 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-// fuction to generate JWT token
+// function to generate JWT token
 func GenerateToken(userID uint, role string, email string) (string, error) {
-	expiresAt := time.Now().Add(time.Duration(initializers.AppConfig.JWTExpiresInHours) * time.Hour)
+	expiresAt := time.Now().Add(time.Duration(jwtExpiresInHours) * time.Hour)
 
 	claims := JWTClaims{
 		UserID: userID,
@@ -30,13 +32,13 @@ func GenerateToken(userID uint, role string, email string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(initializers.AppConfig.JWTSecret))
+	return token.SignedString(jwtSecret)
 }
 
 // function to parse JWT token
 func ParseToken(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(initializers.AppConfig.JWTSecret), nil
+		return jwtSecret, nil
 	})
 	if err != nil {
 		return nil, err

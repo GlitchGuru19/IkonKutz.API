@@ -21,6 +21,9 @@ func init() {
 
 	// Migrate the database
 	initializers.SyncDatabase()
+
+	// Seed the admin user if credentials are provided
+	initializers.SeedAdminUser()
 }
 
 func main() {
